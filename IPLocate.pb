@@ -1,5 +1,11 @@
 ﻿EnableExplicit
 
+Enumeration Gadgets
+	#Gadget_InfoLabel
+	#Gadget_InfoField
+	#Gadget_CloseButton
+EndEnumeration
+
 Structure IPInfo
 	Query.s
 	Status.s
@@ -46,27 +52,26 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 		ProcedureReturn #False
 	EndIf
 	ExtractJSONStructure(JSONValue(0), *Info, IPInfo)
-	FreeJSON(0)
-	If *Info\Status <> "success"
-		ProcedureReturn #False
-	EndIf
-	ProcedureReturn #True
+	ProcedureReturn Bool(*Info\Status = "success")
 EndProcedure
 
 Procedure.s FriendlyInfo(*Info.IPInfo)
-	Protected Res.s
-	Res = "IP appears to be from "
-	With *Info
-		Res + \City + ", "
-		Res + \Region + ", "
-		Res + \Country
-		Res + " (" + \Zip + ")."
-		Res + #LF$ + "The latitude and longitude coordinates are "
-		Res + StrF(\Lat) + ", "
-		Res + StrF(\Lon) + "." + #LF$
-		Res + "The ISP is " + \ISP + "." + #LF$
-		Res + "The timezone is " + \Timezone + "."
-	EndWith
+	Protected Res.s, JSONVal.i
+	ExamineJSONMembers(JSONValue(0))
+	While NextJSONMember(JSONValue(0))
+		JSONVal = JSONMemberValue(JSONValue(0))
+		Res + JSONMemberKey(JSONValue(0)) + ": "
+		Select JSONType(JSONVal)
+			Case #PB_JSON_String
+				Res + GetJSONString(JSONVal)
+			Case #PB_JSON_Number
+				Res + GetJSONFloat(JSONVal)
+			Default
+				Res + "Unknown."
+		EndSelect
+		Res + #LF$
+	Wend
+	FreeJSON(0)
 	ProcedureReturn Res
 EndProcedure
 
