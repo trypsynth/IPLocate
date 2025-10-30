@@ -42,7 +42,7 @@ EndProcedure
 
 Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 	Protected Request.i, Response.s, Status.s
-	Request= HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP)
+	Request = HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP+ "?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,query")
 	If Not Request
 		ProcedureReturn #False
 	EndIf
@@ -56,9 +56,13 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 EndProcedure
 
 Procedure.s FriendlyInfo(*Info.IPInfo)
-	Protected Res.s, JSONVal.i
+	Protected Res.s, Key.s, JSONVal.i
 	ExamineJSONMembers(JSONValue(0))
 	While NextJSONMember(JSONValue(0))
+		Key = JSONMemberKey(JSONValue(0))
+		If Key = "status" Or Key = "query"
+			Continue
+		EndIf
 		JSONVal = JSONMemberValue(JSONValue(0))
 		Res + JSONMemberKey(JSONValue(0)) + ": "
 		Select JSONType(JSONVal)
