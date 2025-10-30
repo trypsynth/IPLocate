@@ -59,7 +59,9 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 	If Not Success
 		; If we failed, we won't still need the JSON to get the info out of.
 		FreeJSON(0)
+		ProcedureReturn #False
 	EndIf
+	ProcedureReturn #True
 EndProcedure
 
 Procedure.s FriendlyInfo(*Info.IPInfo)
@@ -80,7 +82,7 @@ Procedure.s FriendlyInfo(*Info.IPInfo)
 			Default
 				Res + "Unknown."
 		EndSelect
-		Res + #LF$
+		Res + "." + #LF$
 	Wend
 	ProcedureReturn Res
 EndProcedure
