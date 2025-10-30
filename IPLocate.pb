@@ -2,23 +2,27 @@
 
 Structure IPInfo
 	Query.s
+	Status.s
+	Continent.s
+	ContinentCode.s
 	Country.s
+	CountryCode.s
 	Region.s
+	RegionName.s
 	City.s
+	District.s
 	Zip.s
 	Lat.f
 	Lon.f
 	Timezone.s
+	Offset.i
+	Currency.s
 	ISP.s
+	Org.s
+	As.s
+	AsName.s
+	Reverse.s
 EndStructure
-
-Macro JSONString(_Value)
-	GetJSONString(GetJSONMember(JSONValue(0), _Value))
-EndMacro
-
-Macro JSONFloat(_Value)
-	GetJSONFloat(GetJSONMember(JSONValue(0), _Value))
-EndMacro
 
 Procedure.s AskForIP()
 	Protected IP.s
@@ -38,24 +42,14 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 	EndIf
 	Response = HTTPInfo(Request, #PB_HTTP_Response)
 	FinishHTTP(Request)
-	If Not ParseJSON(0, Response)
+	If Not ParseJSON(0, Response, #PB_JSON_NoCase)
 		ProcedureReturn #False
 	EndIf
-	Status = JSONString("status")
-	If Status = "fail"
+	ExtractJSONStructure(JSONValue(0), *Info, IPInfo)
+	FreeJSON(0)
+	If *Info\Status <> "success"
 		ProcedureReturn #False
 	EndIf
-	With *Info
-		\Query = JSONString("query")
-		\Country = JSONString("country")
-		\Region = JSONString("region")
-		\City = JSONString("city")
-		\Zip = JSONString("zip")
-		\Lat = JSONFloat("lat")
-		\Lon = JSONFloat("lon")
-		\Timezone = JSONString("timezone")
-		\ISP = RTrim(JSONString("isp"), ".")
-	EndWith
 	ProcedureReturn #True
 EndProcedure
 
@@ -82,5 +76,5 @@ If Not GetIPInfo(IP, @Info)
 	MessageRequester("Error", "An error occured while looking up the IP address information.", #PB_MessageRequester_Error)
 	End 1
 EndIf
-Result = FriendlyInfo(@info)
+Result = FriendlyInfo(@Info)
 MessageRequester("Results for " + Info\Query, Result, #PB_MessageRequester_Info)
