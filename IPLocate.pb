@@ -82,7 +82,6 @@ Procedure.s FriendlyInfo(*Info.IPInfo)
 		EndSelect
 		Res + #LF$
 	Wend
-	FreeJSON(0)
 	ProcedureReturn Res
 EndProcedure
 
@@ -94,3 +93,4 @@ If Not GetIPInfo(IP, @Info)
 EndIf
 Result = FriendlyInfo(@Info)
 MessageRequester("Results for " + Info\Query, Result, #PB_MessageRequester_Info)
+FreeJSON(0)
