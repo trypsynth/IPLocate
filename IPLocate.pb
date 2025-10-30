@@ -1,9 +1,17 @@
 ﻿EnableExplicit
 
+Enumeration Windows
+	#Window_Results
+EndEnumeration
+
 Enumeration Gadgets
 	#Gadget_InfoLabel
 	#Gadget_InfoField
 	#Gadget_CloseButton
+EndEnumeration
+
+Enumeration Shortcuts
+	#Shortcut_CloseWindow
 EndEnumeration
 
 Structure IPInfo
@@ -57,7 +65,7 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 	ExtractJSONStructure(JSONValue(0), *Info, IPInfo)
 	Success = Bool(*Info\Status = "success")
 	If Not Success
-		; If we failed, we won't still need the JSON to get the info out of.
+		; If we failed, we won't still need the JSON around to query.
 		FreeJSON(0)
 		ProcedureReturn #False
 	EndIf
@@ -87,12 +95,29 @@ Procedure.s FriendlyInfo(*Info.IPInfo)
 	ProcedureReturn Res
 EndProcedure
 
-Define IP.s, Result.s, Info.IPInfo
+Procedure ResultsGadgetEvents()
+	If EventGadget() = #Gadget_CloseButton
+		PostEvent(#PB_Event_CloseWindow)
+	EndIf
+EndProcedure
+
+Procedure ShowResults(Title.s, Results.s)
+	OpenWindow(#Window_Results, #PB_Ignore, #PB_Ignore, 640, 480, Title)
+	TextGadget(#Gadget_InfoLabel, 5, 5, 30, 5, "Results")
+	EditorGadget(#Gadget_InfoField, 5, 15, 400, 250, #PB_Editor_ReadOnly)
+	ButtonGadget(#Gadget_CloseButton, 500, 50, 30, 30, "Close")
+	SetGadgetText(#Gadget_InfoField, Results)
+	SetActiveGadget(#Gadget_InfoField)
+	BindEvent(#PB_Event_Gadget, @ResultsGadgetEvents())
+EndProcedure
+
+Define IP.s, Info.IPInfo
 IP = AskForIP()
 If Not GetIPInfo(IP, @Info)
 	MessageRequester("Error", "An error occured while looking up the IP address information.", #PB_MessageRequester_Error)
 	End 1
 EndIf
-Result = FriendlyInfo(@Info)
-MessageRequester("Results for " + Info\Query, Result, #PB_MessageRequester_Info)
+ShowResults(Info\Query, FriendlyInfo(@Info))
 FreeJSON(0)
+Repeat
+Until WaitWindowEvent(1) = #PB_Event_CloseWindow
