@@ -28,6 +28,9 @@ Structure IPInfo
 	As.s
 	AsName.s
 	Reverse.s
+	Mobile.i
+	Proxy.i
+	Hosting.i
 EndStructure
 
 Procedure.s AskForIP()
@@ -41,7 +44,7 @@ Procedure.s AskForIP()
 EndProcedure
 
 Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
-	Protected Request.i, Response.s, Status.s
+	Protected Request.i, Success.i, Response.s, Status.s
 	Request = HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP+ "?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,query")
 	If Not Request
 		ProcedureReturn #False
@@ -52,7 +55,11 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 		ProcedureReturn #False
 	EndIf
 	ExtractJSONStructure(JSONValue(0), *Info, IPInfo)
-	ProcedureReturn Bool(*Info\Status = "success")
+	Success = Bool(*Info\Status = "success")
+	If Not Success
+		; If we failed, we won't still need the JSON to get the info out of.
+		FreeJSON(0)
+	EndIf
 EndProcedure
 
 Procedure.s FriendlyInfo(*Info.IPInfo)
