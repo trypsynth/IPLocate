@@ -81,7 +81,7 @@ Procedure.s FriendlyInfo(*Info.IPInfo)
 			Continue
 		EndIf
 		JSONVal = JSONMemberValue(JSONValue(0))
-		Res + JSONMemberKey(JSONValue(0)) + ": "
+		Res + Key + ": "
 		Select JSONType(JSONVal)
 			Case #PB_JSON_String
 				Res + GetJSONString(JSONVal)
@@ -92,7 +92,7 @@ Procedure.s FriendlyInfo(*Info.IPInfo)
 		EndSelect
 		Res + "." + #LF$
 	Wend
-	ProcedureReturn Res
+	ProcedureReturn RTrim(Res, #LF$)
 EndProcedure
 
 Procedure ResultsGadgetEvents()
