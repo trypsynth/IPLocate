@@ -101,14 +101,22 @@ Procedure ResultsGadgetEvents()
 	EndIf
 EndProcedure
 
+Procedure ResultsMenuEvents()
+	If EventMenu() = #Shortcut_CloseWindow
+		PostEvent(#PB_Event_CloseWindow)
+	EndIf
+EndProcedure
+
 Procedure ShowResults(Title.s, Results.s)
 	OpenWindow(#Window_Results, #PB_Ignore, #PB_Ignore, 640, 480, Title)
 	TextGadget(#Gadget_InfoLabel, 5, 5, 30, 5, "Results")
 	EditorGadget(#Gadget_InfoField, 5, 15, 400, 250, #PB_Editor_ReadOnly)
 	ButtonGadget(#Gadget_CloseButton, 500, 50, 30, 30, "Close")
+	AddKeyboardShortcut(#Window_Results, #PB_Shortcut_Escape, #Shortcut_CloseWindow)
 	SetGadgetText(#Gadget_InfoField, Results)
 	SetActiveGadget(#Gadget_InfoField)
 	BindEvent(#PB_Event_Gadget, @ResultsGadgetEvents())
+	BindEvent(#PB_Event_Menu, @ResultsMenuEvents())
 EndProcedure
 
 Define IP.s, Info.IPInfo
