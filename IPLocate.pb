@@ -41,6 +41,11 @@ Structure IPInfo
 	Hosting.i
 EndStructure
 
+Structure FieldMapping
+	JSONKey$
+	FriendlyName$
+EndStructure
+
 Procedure$ AskForIP()
 	Protected IP$
 	If CountProgramParameters() > 0
@@ -73,28 +78,66 @@ Procedure.i GetIPInfo(IP$, *Info.IPInfo)
 EndProcedure
 
 Procedure$ FriendlyInfo(*Info.IPInfo)
-	Protected Res$, Key$, Value$, JSONVal.i
-	ExamineJSONMembers(JSONValue(0))
-	While NextJSONMember(JSONValue(0))
-		Key$ = JSONMemberKey(JSONValue(0))
-		If Key$ = "status" Or Key$ = "query"
-			Continue
+	Protected Res$, Value$, JSONVal.i, i.i
+	Protected Dim Fields.FieldMapping(19)
+	Fields(0)\JSONKey$ = "query"
+	Fields(0)\FriendlyName$ = "IP Address"
+	Fields(1)\JSONKey$ = "continent"
+	Fields(1)\FriendlyName$ = "Continent"
+	Fields(2)\JSONKey$ = "continentCode"
+	Fields(2)\FriendlyName$ = "Continent Code"
+	Fields(3)\JSONKey$ = "country"
+	Fields(3)\FriendlyName$ = "Country"
+	Fields(4)\JSONKey$ = "countryCode"
+	Fields(4)\FriendlyName$ = "Country Code"
+	Fields(5)\JSONKey$ = "regionName"
+	Fields(5)\FriendlyName$ = "Region"
+	Fields(6)\JSONKey$ = "region"
+	Fields(6)\FriendlyName$ = "Region Code"
+	Fields(7)\JSONKey$ = "city"
+	Fields(7)\FriendlyName$ = "City"
+	Fields(8)\JSONKey$ = "district"
+	Fields(8)\FriendlyName$ = "District"
+	Fields(9)\JSONKey$ = "zip"
+	Fields(9)\FriendlyName$ = "Zip Code"
+	Fields(10)\JSONKey$ = "lat"
+	Fields(10)\FriendlyName$ = "Latitude"
+	Fields(11)\JSONKey$ = "lon"
+	Fields(11)\FriendlyName$ = "Longitude"
+	Fields(12)\JSONKey$ = "timezone"
+	Fields(12)\FriendlyName$ = "Timezone"
+	Fields(13)\JSONKey$ = "offset"
+	Fields(13)\FriendlyName$ = "UTC Offset"
+	Fields(14)\JSONKey$ = "currency"
+	Fields(14)\FriendlyName$ = "Currency"
+	Fields(15)\JSONKey$ = "isp"
+	Fields(15)\FriendlyName$ = "ISP"
+	Fields(16)\JSONKey$ = "org"
+	Fields(16)\FriendlyName$ = "Organization"
+	Fields(17)\JSONKey$ = "as"
+	Fields(17)\FriendlyName$ = "AS Number"
+	Fields(18)\JSONKey$ = "asname"
+	Fields(18)\FriendlyName$ = "AS Name"
+	Fields(19)\JSONKey$ = "reverse"
+	Fields(19)\FriendlyName$ = "Reverse DNS"
+	For i = 0 To 19
+		JSONVal = GetJSONMember(JSONValue(0), Fields(i)\JSONKey$)
+		If JSONVal
+			Select JSONType(JSONVal)
+				Case #PB_JSON_String
+					Value$ = GetJSONString(JSONVal)
+				Case #PB_JSON_Number
+					Value$ = StrD(GetJSONDouble(JSONVal))
+			EndSelect
+			If Value$ <> ""
+				If Mid(Value$, Len(Value$)) <> "."
+					Value$ + "."
+				EndIf
+				Res$ + Fields(i)\FriendlyName$ + ": " + Value$ + #LF$
+			EndIf
 		EndIf
-		JSONVal = JSONMemberValue(JSONValue(0))
-		Select JSONType(JSONVal)
-			Case #PB_JSON_String
-				Value$ = GetJSONString(JSONVal)
-			Case #PB_JSON_Number
-				Value$ = StrD(GetJSONDouble(JSONVal))
-		EndSelect
-		If Value$ = ""
-			Continue
-		EndIf
-		If Mid(Value$, Len(Value$)) <> "."
-			Value$ + "."
-		EndIf
-		Res$ + Key$ + ": " + Value$ + #LF$
-	Wend
+	Next
+	
 	ProcedureReturn Res$
 EndProcedure
 
