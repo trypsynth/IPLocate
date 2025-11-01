@@ -26,8 +26,8 @@ Structure IPInfo
 	City.s
 	District.s
 	Zip.s
-	Lat.f
-	Lon.f
+	Lat.d
+	Lon.d
 	Timezone.s
 	Offset.i
 	Currency.s
@@ -73,7 +73,8 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 EndProcedure
 
 Procedure.s FriendlyInfo(*Info.IPInfo)
-	Protected Res.s, Key.s, JSONVal.i
+	Protected.s Res, Key, Value
+	Protected JSONVal.i
 	ExamineJSONMembers(JSONValue(0))
 	While NextJSONMember(JSONValue(0))
 		Key = JSONMemberKey(JSONValue(0))
@@ -81,16 +82,19 @@ Procedure.s FriendlyInfo(*Info.IPInfo)
 			Continue
 		EndIf
 		JSONVal = JSONMemberValue(JSONValue(0))
-		Res + Key + ": "
 		Select JSONType(JSONVal)
 			Case #PB_JSON_String
-				Res + GetJSONString(JSONVal)
+				Value = GetJSONString(JSONVal)
 			Case #PB_JSON_Number
-				Res + GetJSONFloat(JSONVal)
-			Default
-				Res + "Unknown."
+				Value = StrD(GetJSONDouble(JSONVal))
 		EndSelect
-		Res + "." + #LF$
+		If Value = ""
+			Continue
+		EndIf
+		If Mid(Value, Len(Value)) <> "."
+			Value + "."
+		EndIf
+		Res + Key + ": " + Value + #LF$
 	Wend
 	ProcedureReturn RTrim(Res, #LF$)
 EndProcedure
@@ -125,7 +129,7 @@ If Not GetIPInfo(IP, @Info)
 	MessageRequester("Error", "An error occured while looking up the IP address information.", #PB_MessageRequester_Error)
 	End 1
 EndIf
-ShowResults(Info\Query, FriendlyInfo(@Info))
+ShowResults(Info\Query + " - IPLocate", FriendlyInfo(@Info))
 FreeJSON(0)
 Repeat
 Until WaitWindowEvent(1) = #PB_Event_CloseWindow
