@@ -15,55 +15,55 @@ Enumeration Shortcuts
 EndEnumeration
 
 Structure IPInfo
-	Query.s
-	Status.s
-	Continent.s
-	ContinentCode.s
-	Country.s
-	CountryCode.s
-	Region.s
-	RegionName.s
-	City.s
-	District.s
-	Zip.s
+	Query$
+	Status$
+	Continent$
+	ContinentCode$
+	Country$
+	CountryCode$
+	Region$
+	RegionName$
+	City$
+	District$
+	Zip$
 	Lat.d
 	Lon.d
-	Timezone.s
+	Timezone$
 	Offset.i
-	Currency.s
-	ISP.s
-	Org.s
-	As.s
-	AsName.s
-	Reverse.s
+	Currency$
+	ISP$
+	Org$
+	As$
+	AsName$
+	Reverse$
 	Mobile.i
 	Proxy.i
 	Hosting.i
 EndStructure
 
-Procedure.s AskForIP()
-	Protected IP.s
+Procedure$ AskForIP()
+	Protected IP$
 	If CountProgramParameters() > 0
-		IP = ProgramParameter(0)
+		IP$ = ProgramParameter(0)
 	Else
-		IP = InputRequester("IP Address", "Enter the IP address to geolocate.", "")
+		IP$ = InputRequester("IP Address", "Enter the IP address to geolocate.", "")
 	EndIf
-	ProcedureReturn IP
+	ProcedureReturn IP$
 EndProcedure
 
-Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
-	Protected Request.i, Success.i, Response.s, Status.s
-	Request = HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP+ "?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,query")
+Procedure.i GetIPInfo(IP$, *Info.IPInfo)
+	Protected Request.i, Success.i, Response$, Status$
+	Request = HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP$ + "?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,query")
 	If Not Request
 		ProcedureReturn #False
 	EndIf
-	Response = HTTPInfo(Request, #PB_HTTP_Response)
+	Response$ = HTTPInfo(Request, #PB_HTTP_Response)
 	FinishHTTP(Request)
-	If Not ParseJSON(0, Response, #PB_JSON_NoCase)
+	If Not ParseJSON(0, Response$, #PB_JSON_NoCase)
 		ProcedureReturn #False
 	EndIf
 	ExtractJSONStructure(JSONValue(0), *Info, IPInfo)
-	Success = Bool(*Info\Status = "success")
+	Success = Bool(*Info\Status$ = "success")
 	If Not Success
 		; If we failed, we won't still need the JSON around to query.
 		FreeJSON(0)
@@ -72,31 +72,30 @@ Procedure.i GetIPInfo(IP.s, *Info.IPInfo)
 	ProcedureReturn #True
 EndProcedure
 
-Procedure.s FriendlyInfo(*Info.IPInfo)
-	Protected.s Res, Key, Value
-	Protected JSONVal.i
+Procedure$ FriendlyInfo(*Info.IPInfo)
+	Protected Res$, Key$, Value$, JSONVal.i
 	ExamineJSONMembers(JSONValue(0))
 	While NextJSONMember(JSONValue(0))
-		Key = JSONMemberKey(JSONValue(0))
-		If Key = "status" Or Key = "query"
+		Key$ = JSONMemberKey(JSONValue(0))
+		If Key$ = "status" Or Key$ = "query"
 			Continue
 		EndIf
 		JSONVal = JSONMemberValue(JSONValue(0))
 		Select JSONType(JSONVal)
 			Case #PB_JSON_String
-				Value = GetJSONString(JSONVal)
+				Value$ = GetJSONString(JSONVal)
 			Case #PB_JSON_Number
-				Value = StrD(GetJSONDouble(JSONVal))
+				Value$ = StrD(GetJSONDouble(JSONVal))
 		EndSelect
-		If Value = ""
+		If Value$ = ""
 			Continue
 		EndIf
-		If Mid(Value, Len(Value)) <> "."
-			Value + "."
+		If Mid(Value$, Len(Value$)) <> "."
+			Value$ + "."
 		EndIf
-		Res + Key + ": " + Value + #LF$
+		Res$ + Key$ + ": " + Value$ + #LF$
 	Wend
-	ProcedureReturn RTrim(Res, #LF$)
+	ProcedureReturn Res$
 EndProcedure
 
 Procedure ResultsGadgetEvents()
@@ -123,13 +122,13 @@ Procedure ShowResults(Title.s, Results.s)
 	BindEvent(#PB_Event_Menu, @ResultsMenuEvents())
 EndProcedure
 
-Define IP.s, Info.IPInfo
-IP = AskForIP()
-If Not GetIPInfo(IP, @Info)
+Define IP$, Info.IPInfo
+IP$ = AskForIP()
+If Not GetIPInfo(IP$, @Info)
 	MessageRequester("Error", "An error occured while looking up the IP address information.", #PB_MessageRequester_Error)
 	End 1
 EndIf
-ShowResults(Info\Query + " - IPLocate", FriendlyInfo(@Info))
+ShowResults(Info\Query$ + " - IPLocate", FriendlyInfo(@Info))
 FreeJSON(0)
 Repeat
 Until WaitWindowEvent(1) = #PB_Event_CloseWindow
