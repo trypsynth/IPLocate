@@ -138,7 +138,7 @@ Procedure$ FriendlyInfo(*Info.IPInfo)
 		EndIf
 	Next
 	
-	ProcedureReturn Res$
+	ProcedureReturn RTrim(Res$, #LF$)
 EndProcedure
 
 Procedure ResultsGadgetEvents()
