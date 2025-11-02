@@ -1,11 +1,12 @@
 ﻿EnableExplicit
 
+#FieldCount = 20
+
 Enumeration Windows
 	#Window_Results
 EndEnumeration
 
 Enumeration Gadgets
-	#Gadget_InfoLabel
 	#Gadget_InfoField
 	#Gadget_CloseButton
 EndEnumeration
@@ -57,7 +58,7 @@ Procedure$ AskForIP()
 EndProcedure
 
 Procedure.i GetIPInfo(IP$, *Info.IPInfo)
-	Protected Request.i, Success.i, Response$, Status$
+	Protected Request.i, Success.i, Response$
 	Request = HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP$ + "?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,query")
 	If Not Request
 		ProcedureReturn #False
@@ -79,48 +80,13 @@ EndProcedure
 
 Procedure$ FriendlyInfo(*Info.IPInfo)
 	Protected Res$, Value$, JSONVal.i, i.i
-	Protected Dim Fields.FieldMapping(19)
-	Fields(0)\JSONKey$ = "query"
-	Fields(0)\FriendlyName$ = "IP Address"
-	Fields(1)\JSONKey$ = "continent"
-	Fields(1)\FriendlyName$ = "Continent"
-	Fields(2)\JSONKey$ = "continentCode"
-	Fields(2)\FriendlyName$ = "Continent Code"
-	Fields(3)\JSONKey$ = "country"
-	Fields(3)\FriendlyName$ = "Country"
-	Fields(4)\JSONKey$ = "countryCode"
-	Fields(4)\FriendlyName$ = "Country Code"
-	Fields(5)\JSONKey$ = "regionName"
-	Fields(5)\FriendlyName$ = "Region"
-	Fields(6)\JSONKey$ = "region"
-	Fields(6)\FriendlyName$ = "Region Code"
-	Fields(7)\JSONKey$ = "city"
-	Fields(7)\FriendlyName$ = "City"
-	Fields(8)\JSONKey$ = "district"
-	Fields(8)\FriendlyName$ = "District"
-	Fields(9)\JSONKey$ = "zip"
-	Fields(9)\FriendlyName$ = "Zip Code"
-	Fields(10)\JSONKey$ = "lat"
-	Fields(10)\FriendlyName$ = "Latitude"
-	Fields(11)\JSONKey$ = "lon"
-	Fields(11)\FriendlyName$ = "Longitude"
-	Fields(12)\JSONKey$ = "timezone"
-	Fields(12)\FriendlyName$ = "Timezone"
-	Fields(13)\JSONKey$ = "offset"
-	Fields(13)\FriendlyName$ = "UTC Offset"
-	Fields(14)\JSONKey$ = "currency"
-	Fields(14)\FriendlyName$ = "Currency"
-	Fields(15)\JSONKey$ = "isp"
-	Fields(15)\FriendlyName$ = "ISP"
-	Fields(16)\JSONKey$ = "org"
-	Fields(16)\FriendlyName$ = "Organization"
-	Fields(17)\JSONKey$ = "as"
-	Fields(17)\FriendlyName$ = "AS Number"
-	Fields(18)\JSONKey$ = "asname"
-	Fields(18)\FriendlyName$ = "AS Name"
-	Fields(19)\JSONKey$ = "reverse"
-	Fields(19)\FriendlyName$ = "Reverse DNS"
-	For i = 0 To 19
+	Protected Dim Fields.FieldMapping(#FieldCount - 1)
+	Restore FieldMappings
+	For i = 0 To #FieldCount - 1
+		Read.s Fields(i)\JSONKey$
+		Read.s Fields(i)\FriendlyName$
+	Next
+	For i = 0 To #FieldCount - 1
 		JSONVal = GetJSONMember(JSONValue(0), Fields(i)\JSONKey$)
 		If JSONVal
 			Select JSONType(JSONVal)
@@ -130,15 +96,17 @@ Procedure$ FriendlyInfo(*Info.IPInfo)
 					Value$ = StrD(GetJSONDouble(JSONVal))
 			EndSelect
 			If Value$ <> ""
-				If Mid(Value$, Len(Value$)) <> "."
+				If Right(Value$, 1) <> "."
 					Value$ + "."
 				EndIf
-				Res$ + Fields(i)\FriendlyName$ + ": " + Value$ + #LF$
+				If Res$ <> ""
+					Res$ + #LF$
+				EndIf
+				Res$ + Fields(i)\FriendlyName$ + ": " + Value$
 			EndIf
 		EndIf
 	Next
-	
-	ProcedureReturn RTrim(Res$, #LF$)
+	ProcedureReturn Res$
 EndProcedure
 
 Procedure ResultsGadgetEvents()
@@ -155,9 +123,8 @@ EndProcedure
 
 Procedure ShowResults(Title$, Results$)
 	OpenWindow(#Window_Results, #PB_Ignore, #PB_Ignore, 640, 480, Title$)
-	TextGadget(#Gadget_InfoLabel, 5, 5, 30, 5, "Results")
-	EditorGadget(#Gadget_InfoField, 5, 15, 400, 250, #PB_Editor_ReadOnly)
-	ButtonGadget(#Gadget_CloseButton, 500, 50, 30, 30, "Close")
+	EditorGadget(#Gadget_InfoField, 10, 10, 620, 420, #PB_Editor_ReadOnly)
+	ButtonGadget(#Gadget_CloseButton, 270, 440, 100, 30, "Close")
 	AddKeyboardShortcut(#Window_Results, #PB_Shortcut_Escape, #Shortcut_CloseWindow)
 	SetGadgetText(#Gadget_InfoField, Results$)
 	SetActiveGadget(#Gadget_InfoField)
@@ -168,10 +135,34 @@ EndProcedure
 Define IP$, Info.IPInfo
 IP$ = AskForIP()
 If Not GetIPInfo(IP$, @Info)
-	MessageRequester("Error", "An error occured while looking up the IP address information.", #PB_MessageRequester_Error)
+	MessageRequester("Error", "An error occurred while looking up the IP address information.", #PB_MessageRequester_Error)
 	End 1
 EndIf
 ShowResults(Info\Query$ + " - IPLocate", FriendlyInfo(@Info))
 FreeJSON(0)
 Repeat
 Until WaitWindowEvent(1) = #PB_Event_CloseWindow
+
+DataSection
+	FieldMappings:
+	Data.s "query", "IP Address"
+	Data.s "continent", "Continent"
+	Data.s "continentCode", "Continent Code"
+	Data.s "country", "Country"
+	Data.s "countryCode", "Country Code"
+	Data.s "regionName", "Region"
+	Data.s "region", "Region Code"
+	Data.s "city", "City"
+	Data.s "district", "District"
+	Data.s "zip", "Zip Code"
+	Data.s "lat", "Latitude"
+	Data.s "lon", "Longitude"
+	Data.s "timezone", "Timezone"
+	Data.s "offset", "UTC Offset"
+	Data.s "currency", "Currency"
+	Data.s "isp", "ISP"
+	Data.s "org", "Organization"
+	Data.s "as", "AS Number"
+	Data.s "asname", "AS Name"
+	Data.s "reverse", "Reverse DNS"
+EndDataSection
