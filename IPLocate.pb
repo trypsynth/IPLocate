@@ -57,8 +57,8 @@ Procedure$ AskForIP()
 	ProcedureReturn IP$
 EndProcedure
 
-Procedure.i GetIPInfo(IP$, *Info.IPInfo)
-	Protected Request.i, Success.i, Response$
+Procedure GetIPInfo(IP$, *Info.IPInfo)
+	Protected Request, Success, Response$
 	Request = HTTPRequest(#PB_HTTP_Get, "http://ip-api.com/json/" + IP$ + "?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,query")
 	If Not Request
 		ProcedureReturn #False
@@ -79,7 +79,7 @@ Procedure.i GetIPInfo(IP$, *Info.IPInfo)
 EndProcedure
 
 Procedure$ FriendlyInfo(*Info.IPInfo)
-	Protected Res$, Value$, JSONVal.i, i.i
+	Protected Res$, Value$, JSONVal, i
 	Protected Dim Fields.FieldMapping(#FieldCount - 1)
 	Restore FieldMappings
 	For i = 0 To #FieldCount - 1
